@@ -8,7 +8,7 @@ import HeadsetIcon from "@material-ui/icons/Headset"
 import KeyboardVoiceIcon from "@material-ui/icons/KeyboardVoice"
 import SettingsIcon from "@material-ui/icons/Settings"
 import TelegramIcon from "@material-ui/icons/Telegram"
-import VolumeDownOutlinedIcon from '@material-ui/icons/VolumeDownOutlined';
+import VolumeMuteOutlinedIcon from '@material-ui/icons/VolumeMuteOutlined';
 import VolumeMuteIcon from "@material-ui/icons/VolumeMute"
 import VolumeUpIcon from "@material-ui/icons/VolumeUp"
 import iconBg from "data-base64:~assets/icon.png"
@@ -59,7 +59,7 @@ export const config = {
   matches: ["https://chat.openai.com/chat*"]
 }
 let recognition = null
-let utterance = null
+let utterance:SpeechSynthesisUtterance = null
 
 function initListen({
   userLang,
@@ -167,6 +167,9 @@ function initListen({
     console.log({ prevPlayerStatus })
     setCurrentPlayerStatus(prevPlayerStatus)
     synth.resume()
+    if(!synth.speaking&&prevPlayerStatus>2){
+      setCurrentPlayerStatus(playerStatus.ListenVoicing)
+    }
   }
   return {
     startListen,
@@ -255,6 +258,11 @@ function toSpeak(
   utterance.pitch = pitch
   utterance.text = sentence
   synth.speak(utterance)
+  utterance.onerror = (e)=>{
+    console.log({e})
+    utterance.onend(e)
+    
+  }
   utterance.onend = () => {
     if (!synth.speaking) {
       setCurrentPlayerStatus(playerStatus.ListenVoicing)
@@ -291,6 +299,12 @@ function mountVolumeIcon({
 }) {
   mountVolumeTimeID = setTimeout(() => {
     clearTimeout(mountVolumeTimeID)
+    mountVolumeIcon({
+      setCurrentPlayerStatus,
+      volume,
+      answerLang,
+      rate,
+      pitch})
     const answerLineButtons = document.querySelectorAll(".self-end")
     answerLineButtons.forEach((dom) => {
       if ([...dom.children].some((d) => d.className.includes("volumeIcon"))) {
@@ -325,21 +339,29 @@ function VolumeIcon({
     if (isPlay) {
       synth.cancel()
       setCurrentPlayerStatus(playerStatus.ListenVoicing)
+      setPlay(false)
+
     } else {
       setCurrentPlayerStatus(playerStatus.Speechling)
       const textContent = volumeIcon.current.closest(".text-base").textContent
       const sentences = textContent.split(sentenceSymbolReg)
-      console.log(sentences)
-      synth.resume()
+      if(synth.paused){
+        synth.resume()
+      }
+      setPlay(true)
       for (let i = 0; i < sentences.length; i++) {
+        function setStatus(status){
+          setPlay(false)
+          setCurrentPlayerStatus(status)
+        }
         toSpeak(
           sentences[i],
           { volume, answerLang, rate, pitch },
-          setCurrentPlayerStatus
+          setStatus
         )
+
       }
     }
-    setPlay(!isPlay)
   }
   return (
     <span
@@ -348,14 +370,13 @@ function VolumeIcon({
       ref={(ref) => {
         volumeIcon.current = ref
       }}>
-      {isPlay ? <VolumeUpIcon /> : <VolumeDownOutlinedIcon />}
+      {isPlay ? <VolumeUpIcon /> : <VolumeMuteOutlinedIcon />}
     </span>
   )
 }
 function IndexContent() {
-  synth.cancel()
+  
 
-  const [bg] = useStorage<string>("recordPlayerBg", "")
   const [currentPlayerStatus, setCurrentPlayerStatus] = useStorage<number>(
     "currentPlayerStatus",
     playerStatus.BeforeListenVoice
@@ -364,19 +385,24 @@ function IndexContent() {
   useEffect(() => {
     initVarStatus(setCurrentPlayerStatus)
     setCurrentPlayerStatus(playerStatus.BeforeListenVoice)
+    if(synth.pending||synth.speaking){
+      synth.cancel()
+    }
     return () => {
       recognition?.abort()
       synth.cancel()
     }
   }, [])
 
+  const [bg,setBg] = useStorage<string>("recordPlayerBg", "")
   const [userLang] = useStorage<string>("userLang", "en-Us")
   const [rate] = useStorage<number>("speechRate", 1)
-  const [pitch] = useStorage<number>("speechPitch", 1)
+  const [pitch] = useStorage<number>("speechPitch", 0.5)
   const [answerLang] = useStorage<string>("answerLang", "")
   const [volume] = useStorage<number>("answerVolume", 1)
   const [recognitionStopWord] = useStorage("recognitionStopWord", "stop")
   const [StopAnswerWord] = useStorage("StopAnswerWord", "stop answer")
+  
   mountVolumeIcon({ setCurrentPlayerStatus, volume, answerLang, rate, pitch })
 
   const {
