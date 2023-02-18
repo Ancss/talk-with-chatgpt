@@ -1,0 +1,93 @@
+.talkContainer {
+  position: fixed;
+  z-index: -1;
+  right: 24px;
+  bottom: 24px;
+
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  /* background-color: red; */
+}
+.recordPlayer {
+  border-radius: 50%;
+  /* border: 4px solid rgb(187, 187, 187); */
+}
+.playerController {
+  width: 80px;
+  transform-origin: 0 0;
+  position: absolute;
+  top: -58px;
+  right: 0;
+  transform: rotate(-5deg); /*17deg*/
+  cursor: pointer;
+}
+
+.settingsButton {
+  width: 24px;
+  position: absolute;
+  bottom: 2px;
+  right: -6px;
+  z-index: 1;
+  /* color: #aaa; */
+}
+.settingsButton path {
+  fill: #5f6570;
+}
+.innerContainer {
+  cursor: pointer;
+}
+.innerPlayerBg {
+  width: 80px;
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  border-radius: 50%;
+
+  background-color: rgba(255, 192, 203, 0.2);
+  backdrop-filter: blur(6px);
+}
+.breathBg {
+  animation: breath 1s ease infinite;
+}
+.innerPlayerBg path {
+  fill: #fff;
+}
+
+.controllerOnPlayer {
+  transform: rotate(17deg); /**/
+  transition: all .6s;
+}
+.playerPlaying {
+  transform-origin: center;
+  animation: playerAni 6s linear infinite;
+}
+.playerPlayingReverse {
+  animation: playerAniReverse 3s linear infinite;
+}
+
+@keyframes playerAni {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes breath {
+  0%,
+  100% {
+    background-color: rgba(255, 192, 203, 0.2);
+  }
+  50% {
+    background-color: rgba(135, 206, 235, 0.2);
+  }
+}
+@keyframes playerAniReverse {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
