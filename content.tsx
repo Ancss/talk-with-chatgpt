@@ -1,29 +1,43 @@
-import Button from "@material-ui/core/Button"
-import Fab from "@material-ui/core/Fab/Fab"
-import Icon from "@material-ui/core/Icon"
-import IconButton from "@material-ui/core/IconButton/IconButton"
-import makeStyles from "@material-ui/core/styles/makeStyles"
-import AccessAlarmIcon from "@material-ui/icons/AccessAlarm"
-import HeadsetIcon from "@material-ui/icons/Headset"
-import KeyboardVoiceIcon from "@material-ui/icons/KeyboardVoice"
-import SettingsIcon from "@material-ui/icons/Settings"
-import TelegramIcon from "@material-ui/icons/Telegram"
-import VolumeMuteOutlinedIcon from '@material-ui/icons/VolumeMuteOutlined';
-import VolumeMuteIcon from "@material-ui/icons/VolumeMute"
-import VolumeUpIcon from "@material-ui/icons/VolumeUp"
-import iconBg from "data-base64:~assets/icon.png"
-import playerControllerBg from "data-base64:~assets/playerController.png"
-import recordPlayerBg from "data-base64:~assets/recordPlayer.png"
-import styleText from "data-text:./content.module.css"
+import Button from '@material-ui/core/Button'
+import Fab from '@material-ui/core/Fab/Fab'
+import Icon from '@material-ui/core/Icon'
+import IconButton from '@material-ui/core/IconButton/IconButton'
+import makeStyles from '@material-ui/core/styles/makeStyles'
+import AccessAlarmIcon from '@material-ui/icons/AccessAlarm'
+import HeadsetIcon from '@material-ui/icons/Headset'
+import KeyboardVoiceIcon from '@material-ui/icons/KeyboardVoice'
+import SettingsIcon from '@material-ui/icons/Settings'
+import TelegramIcon from '@material-ui/icons/Telegram'
+import VolumeMuteOutlinedIcon from '@material-ui/icons/VolumeMuteOutlined'
+import VolumeMuteIcon from '@material-ui/icons/VolumeMute'
+import VolumeUpIcon from '@material-ui/icons/VolumeUp'
+import Drawer from '@material-ui/core/Drawer'
+import TextField from '@material-ui/core/TextField'
+import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
+import Divider from '@material-ui/core/Divider'
+import MenuItem from '@material-ui/core/MenuItem'
+import FormHelperText from '@material-ui/core/FormHelperText'
+import FormControl from '@material-ui/core/FormControl'
+import Select from '@material-ui/core/Select'
+import Grid from '@material-ui/core/Grid'
+import Typography from '@material-ui/core/Typography'
+import Slider from '@material-ui/core/Slider'
+import VolumeDown from '@material-ui/icons/VolumeDown'
+import VolumeUp from '@material-ui/icons/VolumeUp'
+import iconBg from 'data-base64:~assets/icon.png'
+import playerControllerBg from 'data-base64:~assets/playerController.png'
+import recordPlayerBg from 'data-base64:~assets/recordPlayer.png'
+import styleText from 'data-text:./content.module.css'
 // import type { PlasmoCSConfig } from "plasmo"
-import React, { useEffect, useMemo, useRef, useState } from "react"
-import { createRoot } from "react-dom/client"
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
 
 // import * as webkitSpeechRecognition from 'webkitSpeechRecognition';
 
-import { useStorage } from "@plasmohq/storage/dist/hook"
+import { useStorage } from '@plasmohq/storage/dist/hook'
 
-import * as style from "./content.module.css"
+import * as style from './content.module.css'
 
 declare var webkitSpeechRecognition: any
 // declare var webkitSpeechGrammarList: any
@@ -38,7 +52,7 @@ let stopSpeechId = null
 const sentenceSymbolReg =
   /[\u002c\u3001\u002e\u003f\u0021\u003b\u003a\u061b\u061f\u002e\u2026\uff01-\uff0f\uff1a-\uff1b\uff1f-\uff5e\u3002\uff0c\uff1f\uff01\uff1b\uff1a]/g
 export const getStyle = () => {
-  const style = document.createElement("style")
+  const style = document.createElement('style')
   style.textContent = styleText
   return style
 }
@@ -50,16 +64,16 @@ enum playerStatus {
   Speechend,
   SpeechPause,
   SpeechStop,
-  SpeechContinue
+  SpeechContinue,
 }
 let prevPlayerStatus: playerStatus = null
 
 let isListening = false
 export const config = {
-  matches: ["https://chat.openai.com/chat*"]
+  matches: ['https://chat.openai.com/chat*'],
 }
 let recognition = null
-let utterance:SpeechSynthesisUtterance = null
+let utterance: SpeechSynthesisUtterance = null
 
 function initListen({
   userLang,
@@ -70,7 +84,7 @@ function initListen({
   recognitionStopWord,
   StopAnswerWord,
   currentPlayerStatus,
-  setCurrentPlayerStatus
+  setCurrentPlayerStatus,
 }) {
   function startListen() {
     clearInterval(stopSpeechId)
@@ -82,7 +96,7 @@ function initListen({
       recognition.start()
     }
 
-    recognition.lang = userLang ? userLang : ""
+    recognition.lang = userLang ? userLang : ''
     recognition.continuous = true
     // 获取当前浏览器支持的所有语言
     // console.log(window.speechSynthesis.getVoices())
@@ -92,16 +106,16 @@ function initListen({
     recognition.interimResults = true
     // recognition.onstart = true;
     recognition.onstart = function (event) {
-      console.log("recognition start")
+      console.log('recognition start')
     }
     recognition.onresult = (event) => {
       const last = event.results.length - 1
       const text: string = event.results[last][0].transcript
       console.log({ text, event })
       const StopAnswerWordIndex = text
-        .replace(/\s/g, "")
+        .replace(/\s/g, '')
         .toLowerCase()
-        .indexOf(StopAnswerWord.replace(/\s/g, "").toLowerCase())
+        .indexOf(StopAnswerWord.replace(/\s/g, '').toLowerCase())
 
       if (StopAnswerWordIndex > -1) {
         toStopAnswer(setCurrentPlayerStatus)
@@ -110,7 +124,7 @@ function initListen({
       if (!isListening) {
         return
       }
-      const input = document.querySelector("textarea")
+      const input = document.querySelector('textarea')
       const stopWordIndex = text.indexOf(recognitionStopWord)
       console.log({ event, text, last, recognitionStopWord, stopWordIndex })
       // 识别到停止关键字，就停止识别，并向chatGpt发送消息
@@ -119,18 +133,18 @@ function initListen({
         sendMessage()
         return
       }
-      input.value += text + " "
+      input.value += text + ' '
     }
     recognition.onnomatch = function (event) {
-      console.log("recognition nomatch")
+      console.log('recognition nomatch')
       recognition.abort()
     }
     recognition.onerror = function (event) {
-      console.log("recognition error", event)
+      console.log('recognition error', event)
       // recognition.abort()
     }
     recognition.onend = function (event) {
-      console.log("recognition end ")
+      console.log('recognition end ')
       recognition.start()
     }
   }
@@ -143,7 +157,7 @@ function initListen({
     }, 500)
   }
   function sendMessage() {
-    const input = document.querySelector("textarea")
+    const input = document.querySelector('textarea')
     if (!input.value.trim()) {
       return
     }
@@ -167,7 +181,7 @@ function initListen({
     console.log({ prevPlayerStatus })
     setCurrentPlayerStatus(prevPlayerStatus)
     synth.resume()
-    if(!synth.speaking&&prevPlayerStatus>2){
+    if (!synth.speaking && prevPlayerStatus > 2) {
       setCurrentPlayerStatus(playerStatus.ListenVoicing)
     }
   }
@@ -177,18 +191,18 @@ function initListen({
     sendMessage,
     speechPause,
     speechStop,
-    speechContinue
+    speechContinue,
   }
 }
 let prevMessageLen = 0
-let prevText = ""
+let prevText = ''
 let currentMessageStep = 0
 let currentMessageDom: Element = null
 function startSpeech(
   { volume, answerLang, rate, pitch },
   setCurrentPlayerStatus
 ) {
-  const currentMessage = document.querySelectorAll(".text-base")
+  const currentMessage = document.querySelectorAll('.text-base')
   if (currentMessage.length > prevMessageLen) {
     prevMessageLen = currentMessage.length
     currentMessageStep = 0
@@ -204,7 +218,7 @@ function startSpeech(
         // 如果sentences最后一项不是空字符串，说明当前段落还没结束
         if (
           currentMessageStep + 1 === sentences.length &&
-          sentences[sentences.length - 1].trim() !== ""
+          sentences[sentences.length - 1].trim() !== ''
         ) {
           return
         }
@@ -225,10 +239,10 @@ let toStopAnswerIdCount = 0
 function toStopAnswer(setCurrentPlayerStatus) {
   toStopAnswerIdCount++
   const button = document
-    .querySelector(".stretch")
-    .querySelectorAll("button")[0]
+    .querySelector('.stretch')
+    .querySelectorAll('button')[0]
   // 当用户说出stopAnswerWord的时候，并不一定有Stop generating按钮，所以需要等待出现按钮
-  if (button.textContent === "Stop generating" || toStopAnswerIdCount >= 20) {
+  if (button.textContent === 'Stop generating' || toStopAnswerIdCount >= 20) {
     toStopAnswerIdCount = 0
     button?.click()
     synth.cancel()
@@ -258,17 +272,16 @@ function toSpeak(
   utterance.pitch = pitch
   utterance.text = sentence
   synth.speak(utterance)
-  utterance.onerror = (e)=>{
-    console.log({e})
+  utterance.onerror = (e) => {
+    console.log({ e })
     utterance.onend(e)
-    
   }
   utterance.onend = () => {
     if (!synth.speaking) {
       setCurrentPlayerStatus(playerStatus.ListenVoicing)
     }
-    console.log("synth.speaking", synth.speaking)
-    console.log("utterance.onend")
+    console.log('synth.speaking', synth.speaking)
+    console.log('utterance.onend')
   }
 }
 
@@ -276,14 +289,14 @@ function initVarStatus(setCurrentPlayerStatus) {
   // 创建一个事件监听器，监听pathname变化
   // Todo: popstate event not be invoke
   // if someone know why,please contact with me or create a pr,thanks
-  window.addEventListener("popstate", function () {
+  window.addEventListener('popstate', function () {
     console.log({ currentPathName })
     // 检查当前的pathname是否与存储的pathname不同
     if (window.location.pathname !== currentPathName) {
       setCurrentPlayerStatus(playerStatus.BeforeListenVoice)
       currentPathName = location.pathname
       prevMessageLen = 0
-      prevText = ""
+      prevText = ''
       currentMessageStep = 0
       currentMessageDom = null
     }
@@ -295,7 +308,7 @@ function mountVolumeIcon({
   volume,
   answerLang,
   rate,
-  pitch
+  pitch,
 }) {
   mountVolumeTimeID = setTimeout(() => {
     clearTimeout(mountVolumeTimeID)
@@ -304,14 +317,15 @@ function mountVolumeIcon({
       volume,
       answerLang,
       rate,
-      pitch})
-    const answerLineButtons = document.querySelectorAll(".self-end")
+      pitch,
+    })
+    const answerLineButtons = document.querySelectorAll('.self-end')
     answerLineButtons.forEach((dom) => {
-      if ([...dom.children].some((d) => d.className.includes("volumeIcon"))) {
+      if ([...dom.children].some((d) => d.className.includes('volumeIcon'))) {
         return
       }
-      const div = document.createElement("span")
-      div.className = "volumeIcon"
+      const div = document.createElement('span')
+      div.className = 'volumeIcon'
       const root = createRoot(div)
       root.render(
         <VolumeIcon
@@ -331,7 +345,7 @@ function VolumeIcon({
   volume,
   answerLang,
   rate,
-  pitch
+  pitch,
 }) {
   const [isPlay, setPlay] = useState(false)
   const volumeIcon = useRef(null)
@@ -340,52 +354,45 @@ function VolumeIcon({
       synth.cancel()
       setCurrentPlayerStatus(playerStatus.ListenVoicing)
       setPlay(false)
-
     } else {
       setCurrentPlayerStatus(playerStatus.Speechling)
-      const textContent = volumeIcon.current.closest(".text-base").textContent
+      const textContent = volumeIcon.current.closest('.text-base').textContent
       const sentences = textContent.split(sentenceSymbolReg)
-      if(synth.paused){
+      if (synth.paused) {
         synth.resume()
       }
       setPlay(true)
       for (let i = 0; i < sentences.length; i++) {
-        function setStatus(status){
+        function setStatus(status) {
           setPlay(false)
           setCurrentPlayerStatus(status)
         }
-        toSpeak(
-          sentences[i],
-          { volume, answerLang, rate, pitch },
-          setStatus
-        )
-
+        toSpeak(sentences[i], { volume, answerLang, rate, pitch }, setStatus)
       }
     }
   }
   return (
     <span
-      style={{ cursor: "pointer" }}
+      style={{ cursor: 'pointer' }}
       onClick={() => onClick()}
       ref={(ref) => {
         volumeIcon.current = ref
-      }}>
+      }}
+    >
       {isPlay ? <VolumeUpIcon /> : <VolumeMuteOutlinedIcon />}
     </span>
   )
 }
 function IndexContent() {
-  
-
   const [currentPlayerStatus, setCurrentPlayerStatus] = useStorage<number>(
-    "currentPlayerStatus",
+    'currentPlayerStatus',
     playerStatus.BeforeListenVoice
   )
 
   useEffect(() => {
     initVarStatus(setCurrentPlayerStatus)
     setCurrentPlayerStatus(playerStatus.BeforeListenVoice)
-    if(synth.pending||synth.speaking){
+    if (synth.pending || synth.speaking) {
       synth.cancel()
     }
     return () => {
@@ -393,16 +400,21 @@ function IndexContent() {
       synth.cancel()
     }
   }, [])
+  const [bg, setBg] = useStorage<string>('recordPlayerBg', '')
+  const [userLang, setUserLang] = useStorage<string>('userLang', 'en-Us')
+  const [rate, setRate] = useStorage<number>('speechRate', 1)
+  const [pitch, setPitch] = useStorage<number>('speechPitch', 0.5)
+  const [answerLang, setAnswerLang] = useStorage<string>('answerLang', '')
+  const [volume] = useStorage<number>('answerVolume', 1)
+  const [recognitionStopWord, setRecognitionStopWord] = useStorage(
+    'recognitionStopWord',
+    'stop'
+  )
+  const [StopAnswerWord, setStopAnswerWord] = useStorage(
+    'StopAnswerWord',
+    'stop answer'
+  )
 
-  const [bg,setBg] = useStorage<string>("recordPlayerBg", "")
-  const [userLang] = useStorage<string>("userLang", "en-Us")
-  const [rate] = useStorage<number>("speechRate", 1)
-  const [pitch] = useStorage<number>("speechPitch", 0.5)
-  const [answerLang] = useStorage<string>("answerLang", "")
-  const [volume] = useStorage<number>("answerVolume", 1)
-  const [recognitionStopWord] = useStorage("recognitionStopWord", "stop")
-  const [StopAnswerWord] = useStorage("StopAnswerWord", "stop answer")
-  
   mountVolumeIcon({ setCurrentPlayerStatus, volume, answerLang, rate, pitch })
 
   const {
@@ -411,7 +423,7 @@ function IndexContent() {
     sendMessage,
     speechPause,
     speechStop,
-    speechContinue
+    speechContinue,
   } = initListen({
     userLang,
     rate,
@@ -421,7 +433,7 @@ function IndexContent() {
     StopAnswerWord,
     recognitionStopWord,
     currentPlayerStatus,
-    setCurrentPlayerStatus
+    setCurrentPlayerStatus,
   })
   useEffect(() => {
     isListening = currentPlayerStatus === playerStatus.ListenVoicing
@@ -453,6 +465,131 @@ function IndexContent() {
       startListen()
     }
   }
+  let [showDrawer, setShowDrawer] = useState(false)
+  // 点击弹出抽屉
+  function popupDrawer() {
+    setShowDrawer(!showDrawer)
+  }
+  // 获取当前浏览器支持的所有语言
+  // console.log(
+  //   '获取当前浏览器支持的所有语言',
+  //   window.speechSynthesis.getVoices()
+  // )
+  const language = window.speechSynthesis.getVoices()
+  console.log('rate', rate)
+  console.log('pitch', pitch)
+  const list = () => (
+    <div>
+      <List>
+        <ListItem>
+          <TextField
+            onChange={(event) => setBg(event.target.value)}
+            label="recordPlayerBg"
+          />
+        </ListItem>
+
+        <Divider />
+        <ListItem>
+          <FormControl>
+            <Select
+              labelId="demo-simple-select-helper-label"
+              id="demo-simple-select-helper"
+              value={userLang}
+              onChange={(event) => setUserLang(event.target.value as string)}
+            >
+              {language.map((item) => {
+                return (
+                  <MenuItem key={item.name} value={item.lang}>
+                    {item.name}
+                  </MenuItem>
+                )
+              })}
+            </Select>
+            <FormHelperText>Some important helper text</FormHelperText>
+          </FormControl>
+        </ListItem>
+        <ListItem>
+          <Grid container spacing={2}>
+            <Grid item>
+              <VolumeDown />
+            </Grid>
+            <Grid item xs>
+              <Slider value={rate * 100} aria-labelledby="continuous-slider" />
+            </Grid>
+            <Grid item>
+              <VolumeUp />
+            </Grid>
+          </Grid>
+        </ListItem>
+        <ListItem>
+          <Grid container spacing={2}>
+            <Grid item>
+              <Typography id="discrete-slider" gutterBottom>
+                multiple
+              </Typography>
+            </Grid>
+            <Grid item xs>
+              <Slider
+                value={pitch * 100}
+                aria-labelledby="continuous-slider"
+                onChange={(e, newValue) => setPitch((newValue as number) / 100)}
+                min={10}
+                max={200}
+              />
+            </Grid>
+            <Grid item></Grid>
+          </Grid>
+        </ListItem>
+        <ListItem>
+          <FormControl>
+            <Select
+              labelId="demo-simple-select-helper-label"
+              id="demo-simple-select-helper"
+              value={answerLang}
+              onChange={(event) => setAnswerLang(event.target.value as string)}
+            >
+              {language.map((item) => {
+                return (
+                  <MenuItem key={item.name} value={item.lang}>
+                    {item.name}
+                  </MenuItem>
+                )
+              })}
+            </Select>
+            <FormHelperText>Some important helper text</FormHelperText>
+          </FormControl>
+        </ListItem>
+        <ListItem>
+          <Grid container spacing={2}>
+            <Grid item>
+              <Typography id="discrete-slider" gutterBottom>
+                volume
+              </Typography>
+            </Grid>
+            <Grid item xs>
+              <Slider
+                value={volume * 100}
+                aria-labelledby="continuous-slider"
+              />
+            </Grid>
+            <Grid item></Grid>
+          </Grid>
+        </ListItem>
+        <ListItem>
+          <TextField
+            onChange={(event) => setRecognitionStopWord(event.target.value)}
+            label="recognitionStopWord"
+          />
+        </ListItem>
+        <ListItem>
+          <TextField
+            onChange={(event) => setStopAnswerWord(event.target.value)}
+            label="StopAnswerWord"
+          />
+        </ListItem>
+      </List>
+    </div>
+  )
 
   const isUseAnimating = useMemo<boolean>(
     () =>
@@ -461,7 +598,7 @@ function IndexContent() {
         // playerStatus.SendChatMessage,
         playerStatus.SpeechPause,
         playerStatus.SpeechStop,
-        playerStatus.Speechend
+        playerStatus.Speechend,
       ].includes(currentPlayerStatus),
     [currentPlayerStatus]
   )
@@ -469,48 +606,58 @@ function IndexContent() {
   return (
     <div className={style.talkContainer}>
       <img
-        width={"100%"}
+        width={'100%'}
         className={[
           style.recordPlayer,
-          isUseAnimating ? style.playerPlaying : ""
-        ].join(" ")}
+          isUseAnimating ? style.playerPlaying : '',
+        ].join(' ')}
         src={recordPlayerBg}
         alt=""
       />
       <img
         className={[
           style.playerController,
-          isUseAnimating ? style.controllerOnPlayer : ""
-        ].join(" ")}
+          isUseAnimating ? style.controllerOnPlayer : '',
+        ].join(' ')}
         onClick={() => toggleStatus(true)}
         src={playerControllerBg}
         alt=""
       />
       <div
-        className={[style.innerContainer].join(" ")}
-        onClick={() => toggleStatus(false)}>
+        className={[style.innerContainer].join(' ')}
+        onClick={() => toggleStatus(false)}
+      >
         <img className={style.innerPlayerBg} src={bg ? bg : iconBg} alt="" />
         <StatusComponentIcon
-          className={isUseAnimating ? style.breathBg : ""}
-          currentPlayerStatus={currentPlayerStatus}></StatusComponentIcon>
+          className={isUseAnimating ? style.breathBg : ''}
+          currentPlayerStatus={currentPlayerStatus}
+        ></StatusComponentIcon>
       </div>
       <SettingsIcon
+        onClick={() => popupDrawer()}
         className={`${style.settingsButton} ${
-          isUseAnimating ? style.playerPlayingReverse : ""
+          isUseAnimating ? style.playerPlayingReverse : ''
         }`}
       />
+      <Drawer
+        anchor="right"
+        open={showDrawer}
+        onClose={() => setShowDrawer(false)}
+      >
+        {list()}
+      </Drawer>
     </div>
   )
 }
 export default IndexContent
 
 function StatusComponentIcon({ currentPlayerStatus, className }) {
-  const classNames = [style.innerPlayerBg, className].join(" ")
+  const classNames = [style.innerPlayerBg, className].join(' ')
 
   return currentPlayerStatus === playerStatus.BeforeListenVoice ? (
     <KeyboardVoiceIcon
       className={classNames}
-      style={{ backgroundColor: "rgba(135, 206, 235,0.2)" }}
+      style={{ backgroundColor: 'rgba(135, 206, 235,0.2)' }}
     />
   ) : currentPlayerStatus === playerStatus.ListenVoicing ? (
     <KeyboardVoiceIcon className={classNames} />
@@ -522,12 +669,12 @@ function StatusComponentIcon({ currentPlayerStatus, className }) {
     prevPlayerStatus > 2 ? (
       <HeadsetIcon
         className={classNames}
-        style={{ backgroundColor: "rgba(135, 206, 235,0.2)" }}
+        style={{ backgroundColor: 'rgba(135, 206, 235,0.2)' }}
       />
     ) : (
       <KeyboardVoiceIcon
         className={classNames}
-        style={{ backgroundColor: "rgba(135, 206, 235,0.2)" }}
+        style={{ backgroundColor: 'rgba(135, 206, 235,0.2)' }}
       />
     )
   ) : (
