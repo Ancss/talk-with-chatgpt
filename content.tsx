@@ -1,20 +1,34 @@
-import Button from "@material-ui/core/Button"
-import Fab from "@material-ui/core/Fab/Fab"
-import Icon from "@material-ui/core/Icon"
-import IconButton from "@material-ui/core/IconButton/IconButton"
-import makeStyles from "@material-ui/core/styles/makeStyles"
-import AccessAlarmIcon from "@material-ui/icons/AccessAlarm"
-import HeadsetIcon from "@material-ui/icons/Headset"
-import KeyboardVoiceIcon from "@material-ui/icons/KeyboardVoice"
-import SettingsIcon from "@material-ui/icons/Settings"
-import TelegramIcon from "@material-ui/icons/Telegram"
-import VolumeMuteOutlinedIcon from '@material-ui/icons/VolumeMuteOutlined';
-import VolumeMuteIcon from "@material-ui/icons/VolumeMute"
-import VolumeUpIcon from "@material-ui/icons/VolumeUp"
-import iconBg from "data-base64:~assets/icon.png"
-import playerControllerBg from "data-base64:~assets/playerController.png"
-import recordPlayerBg from "data-base64:~assets/recordPlayer.png"
-import styleText from "data-text:./content.module.css"
+import Button from '@material-ui/core/Button'
+import Fab from '@material-ui/core/Fab/Fab'
+import Icon from '@material-ui/core/Icon'
+import IconButton from '@material-ui/core/IconButton/IconButton'
+import makeStyles from '@material-ui/core/styles/makeStyles'
+import AccessAlarmIcon from '@material-ui/icons/AccessAlarm'
+import HeadsetIcon from '@material-ui/icons/Headset'
+import KeyboardVoiceIcon from '@material-ui/icons/KeyboardVoice'
+import SettingsIcon from '@material-ui/icons/Settings'
+import TelegramIcon from '@material-ui/icons/Telegram'
+import VolumeMuteOutlinedIcon from '@material-ui/icons/VolumeMuteOutlined'
+import VolumeMuteIcon from '@material-ui/icons/VolumeMute'
+import VolumeUpIcon from '@material-ui/icons/VolumeUp'
+import Drawer from '@material-ui/core/Drawer'
+import TextField from '@material-ui/core/TextField'
+import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
+import Divider from '@material-ui/core/Divider'
+import MenuItem from '@material-ui/core/MenuItem'
+import FormHelperText from '@material-ui/core/FormHelperText'
+import FormControl from '@material-ui/core/FormControl'
+import Select from '@material-ui/core/Select'
+import Grid from '@material-ui/core/Grid'
+import Typography from '@material-ui/core/Typography'
+import Slider from '@material-ui/core/Slider'
+import VolumeDown from '@material-ui/icons/VolumeDown'
+import VolumeUp from '@material-ui/icons/VolumeUp'
+import iconBg from 'data-base64:~assets/icon.png'
+import playerControllerBg from 'data-base64:~assets/playerController.png'
+import recordPlayerBg from 'data-base64:~assets/recordPlayer.png'
+import styleText from 'data-text:./content.module.css'
 // import type { PlasmoCSConfig } from "plasmo"
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
@@ -393,16 +407,21 @@ function IndexContent() {
       synth.cancel()
     }
   }, [])
+  const [bg, setBg] = useStorage<string>('recordPlayerBg', '')
+  const [userLang, setUserLang] = useStorage<string>('userLang', 'en-Us')
+  const [rate, setRate] = useStorage<number>('speechRate', 1)
+  const [pitch, setPitch] = useStorage<number>('speechPitch', 0.5)
+  const [answerLang, setAnswerLang] = useStorage<string>('answerLang', '')
+  const [volume] = useStorage<number>('answerVolume', 1)
+  const [recognitionStopWord, setRecognitionStopWord] = useStorage(
+    'recognitionStopWord',
+    'stop'
+  )
+  const [StopAnswerWord, setStopAnswerWord] = useStorage(
+    'StopAnswerWord',
+    'stop answer'
+  )
 
-  const [bg,setBg] = useStorage<string>("recordPlayerBg", "")
-  const [userLang] = useStorage<string>("userLang", "en-Us")
-  const [rate] = useStorage<number>("speechRate", 1)
-  const [pitch] = useStorage<number>("speechPitch", 0.5)
-  const [answerLang] = useStorage<string>("answerLang", "")
-  const [volume] = useStorage<number>("answerVolume", 1)
-  const [recognitionStopWord] = useStorage("recognitionStopWord", "stop")
-  const [StopAnswerWord] = useStorage("StopAnswerWord", "stop answer")
-  
   mountVolumeIcon({ setCurrentPlayerStatus, volume, answerLang, rate, pitch })
 
   const {
@@ -453,6 +472,131 @@ function IndexContent() {
       startListen()
     }
   }
+  let [showDrawer, setShowDrawer] = useState(false)
+  // 点击弹出抽屉
+  function popupDrawer() {
+    setShowDrawer(!showDrawer)
+  }
+  // 获取当前浏览器支持的所有语言
+  // console.log(
+  //   '获取当前浏览器支持的所有语言',
+  //   window.speechSynthesis.getVoices()
+  // )
+  const language = window.speechSynthesis.getVoices()
+  console.log('rate', rate)
+  console.log('pitch', pitch)
+  const list = () => (
+    <div>
+      <List>
+        <ListItem>
+          <TextField
+            onChange={(event) => setBg(event.target.value)}
+            label="recordPlayerBg"
+          />
+        </ListItem>
+
+        <Divider />
+        <ListItem>
+          <FormControl>
+            <Select
+              labelId="demo-simple-select-helper-label"
+              id="demo-simple-select-helper"
+              value={userLang}
+              onChange={(event) => setUserLang(event.target.value as string)}
+            >
+              {language.map((item) => {
+                return (
+                  <MenuItem key={item.name} value={item.lang}>
+                    {item.name}
+                  </MenuItem>
+                )
+              })}
+            </Select>
+            <FormHelperText>Some important helper text</FormHelperText>
+          </FormControl>
+        </ListItem>
+        <ListItem>
+          <Grid container spacing={2}>
+            <Grid item>
+              <VolumeDown />
+            </Grid>
+            <Grid item xs>
+              <Slider value={rate * 100} aria-labelledby="continuous-slider" />
+            </Grid>
+            <Grid item>
+              <VolumeUp />
+            </Grid>
+          </Grid>
+        </ListItem>
+        <ListItem>
+          <Grid container spacing={2}>
+            <Grid item>
+              <Typography id="discrete-slider" gutterBottom>
+                multiple
+              </Typography>
+            </Grid>
+            <Grid item xs>
+              <Slider
+                value={pitch * 100}
+                aria-labelledby="continuous-slider"
+                onChange={(e, newValue) => setPitch((newValue as number) / 100)}
+                min={10}
+                max={200}
+              />
+            </Grid>
+            <Grid item></Grid>
+          </Grid>
+        </ListItem>
+        <ListItem>
+          <FormControl>
+            <Select
+              labelId="demo-simple-select-helper-label"
+              id="demo-simple-select-helper"
+              value={answerLang}
+              onChange={(event) => setAnswerLang(event.target.value as string)}
+            >
+              {language.map((item) => {
+                return (
+                  <MenuItem key={item.name} value={item.lang}>
+                    {item.name}
+                  </MenuItem>
+                )
+              })}
+            </Select>
+            <FormHelperText>Some important helper text</FormHelperText>
+          </FormControl>
+        </ListItem>
+        <ListItem>
+          <Grid container spacing={2}>
+            <Grid item>
+              <Typography id="discrete-slider" gutterBottom>
+                volume
+              </Typography>
+            </Grid>
+            <Grid item xs>
+              <Slider
+                value={volume * 100}
+                aria-labelledby="continuous-slider"
+              />
+            </Grid>
+            <Grid item></Grid>
+          </Grid>
+        </ListItem>
+        <ListItem>
+          <TextField
+            onChange={(event) => setRecognitionStopWord(event.target.value)}
+            label="recognitionStopWord"
+          />
+        </ListItem>
+        <ListItem>
+          <TextField
+            onChange={(event) => setStopAnswerWord(event.target.value)}
+            label="StopAnswerWord"
+          />
+        </ListItem>
+      </List>
+    </div>
+  )
 
   const isUseAnimating = useMemo<boolean>(
     () =>
@@ -495,10 +639,18 @@ function IndexContent() {
           currentPlayerStatus={currentPlayerStatus}></StatusComponentIcon>
       </div>
       <SettingsIcon
+        onClick={() => popupDrawer()}
         className={`${style.settingsButton} ${
           isUseAnimating ? style.playerPlayingReverse : ""
         }`}
       />
+      <Drawer
+        anchor="right"
+        open={showDrawer}
+        onClose={() => setShowDrawer(false)}
+      >
+        {list()}
+      </Drawer>
     </div>
   )
 }
