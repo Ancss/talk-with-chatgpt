@@ -93,7 +93,7 @@ function initListen({
     if (!recognition) {
       recognition = new SpeechRecognition()
       recognition.start()
-    }
+    } 
     recognition.lang = userLang ? userLang : ''
     recognition.continuous = true
     recognition.interimResults = true
@@ -104,7 +104,6 @@ function initListen({
       console.log('recognition start')
     }
     recognition.onresult = (event) => {
-      console.log(event)
       let text = ''
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) text += event.results[i][0].transcript
@@ -113,7 +112,6 @@ function initListen({
         .replace(/\s/g, '')
         .toLowerCase()
         .indexOf(StopAnswerWord.replace(/\s/g, '').toLowerCase())
-
       if (StopAnswerWordIndex > -1) {
         toStopAnswer(setCurrentPlayerStatus)
         return
@@ -131,16 +129,18 @@ function initListen({
       input.value += text + ' '
     }
     recognition.onnomatch = function (event) {
-      console.log('recognition nomatch')
+      // console.log('recognition nomatch')
       recognition.abort()
     }
     recognition.onerror = function (event) {
-      console.log('recognition error', event)
+      // console.log('recognition error', event)
       // recognition.abort()
     }
     recognition.onend = function (event) {
-      console.log('recognition end ',event)
-      recognition.start()
+      if(recognition.active) {
+        console.log('recognition end ', event)
+        recognition?.start()
+      }
     }
   }
 
@@ -173,7 +173,6 @@ function initListen({
     synth.cancel()
   }
   function speechContinue() {
-    console.log({ prevPlayerStatus })
     setCurrentPlayerStatus(prevPlayerStatus)
     synth.resume()
     if (!synth.speaking && prevPlayerStatus > 2) {
@@ -208,7 +207,6 @@ function startSpeech(
     if (text !== prevText) {
       prevText = text
       const sentences = text.split(sentenceSymbolReg)
-      console.log(sentences, currentMessageStep)
       for (let i = currentMessageStep; i < sentences.length; i++) {
         // if last item is not '' , the segment is not done;
         if (
@@ -268,15 +266,16 @@ function toSpeak(
   utterance.text = sentence
   synth.speak(utterance)
   utterance.onerror = (e) => {
-    console.log({ e })
     utterance.onend(e)
   }
   utterance.onend = () => {
     if (!synth.speaking) {
+      if (recognition) {
+        recognition.onresult = () => {}
+        recognition = null
+      }
       setCurrentPlayerStatus(playerStatus.ListenVoicing)
     }
-    console.log('synth.speaking', synth.speaking)
-    console.log('utterance.onend')
   }
 }
 
@@ -284,7 +283,6 @@ function initVarStatus(setCurrentPlayerStatus) {
   // Todo: popstate event not be invoke
   // if someone know why,please contact with me or create a pr,thanks
   window.addEventListener('popstate', function () {
-    console.log({ currentPathName })
     // 检查当前的pathname是否与存储的pathname不同
     if (window.location.pathname !== currentPathName) {
       setCurrentPlayerStatus(playerStatus.BeforeListenVoice)
@@ -346,7 +344,6 @@ function VolumeIcon({
   function onClick() {
     if (isPlay) {
       synth.cancel()
-      setCurrentPlayerStatus(playerStatus.ListenVoicing)
       setPlay(false)
     } else {
       setCurrentPlayerStatus(playerStatus.Speechling)
@@ -431,6 +428,9 @@ function IndexContent() {
   })
   useEffect(() => {
     isListening = currentPlayerStatus === playerStatus.ListenVoicing
+    if (isListening) {
+      startListen()
+    }
   }, [currentPlayerStatus])
   function toggleStatus(isController) {
     // click the controller to pause or resume
@@ -461,18 +461,11 @@ function IndexContent() {
     }
   }
   let [showDrawer, setShowDrawer] = useState(false)
-  // 点击弹出抽屉
   function popupDrawer() {
     setShowDrawer(!showDrawer)
   }
-  // 获取当前浏览器支持的所有语言
-  // console.log(
-  //   '获取当前浏览器支持的所有语言',
-  //   window.speechSynthesis.getVoices()
-  // )
+
   const language = window.speechSynthesis.getVoices()
-  console.log('rate', rate)
-  console.log('pitch', pitch)
   const list = () => (
     <div>
       <List>
