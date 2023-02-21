@@ -91,3 +91,7 @@
     transform: rotate(-360deg);
   }
 }
+
+.rightMenuContainer{
+  width: 400px;
+}

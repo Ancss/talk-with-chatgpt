@@ -39,7 +39,7 @@
       "textToSpeech"
     ],
     "host_permissions": [
-      "https://chat.openai.com/chat*"
+      "https://chat.openai.com/*"
     ]
   }
 }

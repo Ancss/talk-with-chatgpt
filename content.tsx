@@ -13,8 +13,6 @@ import VolumeMuteIcon from '@material-ui/icons/VolumeMute'
 import VolumeUpIcon from '@material-ui/icons/VolumeUp'
 import Drawer from '@material-ui/core/Drawer'
 import TextField from '@material-ui/core/TextField'
-import List from '@material-ui/core/List'
-import ListItem from '@material-ui/core/ListItem'
 import Divider from '@material-ui/core/Divider'
 import MenuItem from '@material-ui/core/MenuItem'
 import FormHelperText from '@material-ui/core/FormHelperText'
@@ -32,12 +30,12 @@ import styleText from 'data-text:./content.module.css'
 // import type { PlasmoCSConfig } from "plasmo"
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-
 // import * as webkitSpeechRecognition from 'webkitSpeechRecognition';
 
 import { useStorage } from '@plasmohq/storage/dist/hook'
 
 import * as style from './content.module.css'
+import { MenuList } from '~list'
 
 declare var webkitSpeechRecognition: any
 // declare var webkitSpeechGrammarList: any
@@ -66,7 +64,7 @@ enum playerStatus {
   SpeechContinue,
 }
 let prevPlayerStatus: playerStatus = null
-
+let mountVolumeTimeID = null
 let isListening = false
 export const config = {
   matches: ['https://chat.openai.com/chat*'],
@@ -81,7 +79,7 @@ function initListen({
   answerLang,
   volume,
   recognitionStopWord,
-  StopAnswerWord,
+  stopAnswerWord,
   currentPlayerStatus,
   setCurrentPlayerStatus,
 }) {
@@ -93,7 +91,7 @@ function initListen({
     if (!recognition) {
       recognition = new SpeechRecognition()
       recognition.start()
-    } 
+    }
     recognition.lang = userLang ? userLang : ''
     recognition.continuous = true
     recognition.interimResults = true
@@ -111,7 +109,7 @@ function initListen({
       const StopAnswerWordIndex = text
         .replace(/\s/g, '')
         .toLowerCase()
-        .indexOf(StopAnswerWord.replace(/\s/g, '').toLowerCase())
+        .indexOf(stopAnswerWord.replace(/\s/g, '').toLowerCase())
       if (StopAnswerWordIndex > -1) {
         toStopAnswer(setCurrentPlayerStatus)
         return
@@ -137,8 +135,8 @@ function initListen({
       // recognition.abort()
     }
     recognition.onend = function (event) {
-      if(recognition.active) {
-        console.log('recognition end ', event)
+      console.log('recognition end ', event, recognition.active)
+      if (!recognition.active) {
         recognition?.start()
       }
     }
@@ -260,6 +258,7 @@ function toSpeak(
   }
   utterance = new SpeechSynthesisUtterance()
   utterance.volume = volume
+  console.log({ answerLang, volume, rate, pitch })
   utterance.lang = answerLang
   utterance.rate = rate
   utterance.pitch = pitch
@@ -294,86 +293,7 @@ function initVarStatus(setCurrentPlayerStatus) {
     }
   })
 }
-let mountVolumeTimeID = null
-function mountVolumeIcon({
-  setCurrentPlayerStatus,
-  volume,
-  answerLang,
-  rate,
-  pitch,
-}) {
-  mountVolumeTimeID = setTimeout(() => {
-    clearTimeout(mountVolumeTimeID)
-    mountVolumeIcon({
-      setCurrentPlayerStatus,
-      volume,
-      answerLang,
-      rate,
-      pitch,
-    })
-    const answerLineButtons = document.querySelectorAll('.self-end')
-    answerLineButtons.forEach((dom) => {
-      if ([...dom.children].some((d) => d.className.includes('volumeIcon'))) {
-        return
-      }
-      const div = document.createElement('span')
-      div.className = 'volumeIcon'
-      const root = createRoot(div)
-      root.render(
-        <VolumeIcon
-          setCurrentPlayerStatus={setCurrentPlayerStatus}
-          volume={volume}
-          answerLang={answerLang}
-          rate={rate}
-          pitch={pitch}
-        />,
-      )
-      dom.appendChild(div)
-    })
-  }, 5000)
-}
-function VolumeIcon({
-  setCurrentPlayerStatus,
-  volume,
-  answerLang,
-  rate,
-  pitch,
-}) {
-  const [isPlay, setPlay] = useState(false)
-  const volumeIcon = useRef(null)
-  function onClick() {
-    if (isPlay) {
-      synth.cancel()
-      setPlay(false)
-    } else {
-      setCurrentPlayerStatus(playerStatus.Speechling)
-      const textContent = volumeIcon.current.closest('.text-base').textContent
-      const sentences = textContent.split(sentenceSymbolReg)
-      if (synth.paused) {
-        synth.resume()
-      }
-      setPlay(true)
-      for (let i = 0; i < sentences.length; i++) {
-        function setStatus(status) {
-          setPlay(false)
-          setCurrentPlayerStatus(status)
-        }
-        toSpeak(sentences[i], { volume, answerLang, rate, pitch }, setStatus)
-      }
-    }
-  }
-  return (
-    <span
-      style={{ cursor: 'pointer' }}
-      onClick={() => onClick()}
-      ref={(ref) => {
-        volumeIcon.current = ref
-      }}
-    >
-      {isPlay ? <VolumeUpIcon /> : <VolumeMuteOutlinedIcon />}
-    </span>
-  )
-}
+
 function IndexContent() {
   const [currentPlayerStatus, setCurrentPlayerStatus] = useStorage<number>(
     'currentPlayerStatus',
@@ -395,19 +315,86 @@ function IndexContent() {
   const [userLang, setUserLang] = useStorage<string>('userLang', 'en-US')
   const [rate, setRate] = useStorage<number>('speechRate', 1)
   const [pitch, setPitch] = useStorage<number>('speechPitch', 0.5)
-  const [answerLang, setAnswerLang] = useStorage<string>('answerLang', '')
-  const [volume] = useStorage<number>('answerVolume', 1)
+  const [answerLang, setAnswerLang] = useStorage<string>('answerLang', 'en-US')
+  const [volume, setVolume] = useStorage<number>('answerVolume', 1)
   const [recognitionStopWord, setRecognitionStopWord] = useStorage(
     'recognitionStopWord',
     'stop',
   )
-  const [StopAnswerWord, setStopAnswerWord] = useStorage(
-    'StopAnswerWord',
+  const [stopAnswerWord, setStopAnswerWord] = useStorage(
+    'stopAnswerWord',
     'stop answer',
   )
-
-  mountVolumeIcon({ setCurrentPlayerStatus, volume, answerLang, rate, pitch })
-
+  let refAnswerLang = useRef<string>()
+  let refRate = useRef<number>()
+  let refPitch = useRef<number>()
+  let refVolume = useRef<number>()
+  refAnswerLang.current = answerLang
+  refRate.current = rate
+  refPitch.current = pitch
+  refVolume.current = volume
+  console.log({ volume, answerLang, rate, pitch })
+  mountVolumeIcon()
+  function mountVolumeIcon() {
+    mountVolumeTimeID = setTimeout(() => {
+      clearTimeout(mountVolumeTimeID)
+      mountVolumeIcon()
+      const answerLineButtons = document.querySelectorAll('.self-end')
+      answerLineButtons.forEach((dom) => {
+        if ([...dom.children].some((d) => d.className.includes('volumeIcon'))) {
+          return
+        }
+        const div = document.createElement('span')
+        div.className = 'volumeIcon'
+        const root = createRoot(div)
+        root.render(<VolumeIcon />)
+        dom.appendChild(div)
+      })
+    }, 5000)
+  }
+  // const [isPlay, setPlay] = useState(false)
+  // const volumeIcon = useRef(null)
+  function VolumeIcon() {
+    function onClick(e) {
+      // if (isPlay) {
+      //   synth.cancel()
+      //   setPlay(false)
+      // } else {
+      //   setCurrentPlayerStatus(playerStatus.Speechling)
+      // const textContent = volumeIcon.current.closest('.text-base').textContent
+      const textContent = e.target.closest('.text-base').textContent
+      const sentences = textContent.split(sentenceSymbolReg)
+      if (synth.paused) {
+        synth.resume()
+      }
+      //   setPlay(true)
+      for (let i = 0; i < sentences.length; i++) {
+        function setStatus(status) {
+          // setPlay(false)
+          setCurrentPlayerStatus(status)
+        }
+        toSpeak(
+          sentences[i],
+          {
+            answerLang: refAnswerLang.current,
+            rate: refRate.current,
+            pitch: refPitch.current,
+            volume: refVolume.current,
+          },
+          setStatus,
+        )
+      }
+      // }
+    }
+    return (
+      <span style={{ cursor: 'pointer' }} onClick={(e) => onClick(e)}>
+        {
+          // <VolumeUpIcon /> :
+          <VolumeMuteOutlinedIcon />
+        }
+      </span>
+    )
+  }
   const {
     startListen,
     startSpeechWork,
@@ -421,7 +408,7 @@ function IndexContent() {
     pitch,
     answerLang,
     volume,
-    StopAnswerWord,
+    stopAnswerWord,
     recognitionStopWord,
     currentPlayerStatus,
     setCurrentPlayerStatus,
@@ -462,122 +449,9 @@ function IndexContent() {
   }
   let [showDrawer, setShowDrawer] = useState(false)
   function popupDrawer() {
+    setCurrentPlayerStatus(playerStatus.BeforeListenVoice)
     setShowDrawer(!showDrawer)
   }
-
-  const language = window.speechSynthesis.getVoices()
-  const list = () => (
-    <div>
-      <List>
-        <ListItem>
-          <TextField
-            onChange={(event) => setBg(event.target.value)}
-            label="recordPlayerBg"
-          />
-        </ListItem>
-
-        <Divider />
-        <ListItem>
-          <FormControl>
-            <Select
-              labelId="demo-simple-select-helper-label"
-              id="demo-simple-select-helper"
-              value={userLang}
-              onChange={(event) => setUserLang(event.target.value as string)}
-            >
-              {language.map((item) => {
-                return (
-                  <MenuItem key={item.name} value={item.lang}>
-                    {item.name}
-                  </MenuItem>
-                )
-              })}
-            </Select>
-            <FormHelperText>Some important helper text</FormHelperText>
-          </FormControl>
-        </ListItem>
-        <ListItem>
-          <Grid container spacing={2}>
-            <Grid item>
-              <VolumeDown />
-            </Grid>
-            <Grid item xs>
-              <Slider value={rate * 100} aria-labelledby="continuous-slider" />
-            </Grid>
-            <Grid item>
-              <VolumeUp />
-            </Grid>
-          </Grid>
-        </ListItem>
-        <ListItem>
-          <Grid container spacing={2}>
-            <Grid item>
-              <Typography id="discrete-slider" gutterBottom>
-                multiple
-              </Typography>
-            </Grid>
-            <Grid item xs>
-              <Slider
-                value={pitch * 100}
-                aria-labelledby="continuous-slider"
-                onChange={(e, newValue) => setPitch((newValue as number) / 100)}
-                min={10}
-                max={200}
-              />
-            </Grid>
-            <Grid item></Grid>
-          </Grid>
-        </ListItem>
-        <ListItem>
-          <FormControl>
-            <Select
-              labelId="demo-simple-select-helper-label"
-              id="demo-simple-select-helper"
-              value={answerLang}
-              onChange={(event) => setAnswerLang(event.target.value as string)}
-            >
-              {language.map((item) => {
-                return (
-                  <MenuItem key={item.name} value={item.lang}>
-                    {item.name}
-                  </MenuItem>
-                )
-              })}
-            </Select>
-            <FormHelperText>Some important helper text</FormHelperText>
-          </FormControl>
-        </ListItem>
-        <ListItem>
-          <Grid container spacing={2}>
-            <Grid item>
-              <Typography id="discrete-slider" gutterBottom>
-                volume
-              </Typography>
-            </Grid>
-            <Grid item xs>
-              <Slider
-                value={volume * 100}
-                aria-labelledby="continuous-slider"
-              />
-            </Grid>
-            <Grid item></Grid>
-          </Grid>
-        </ListItem>
-        <ListItem>
-          <TextField
-            onChange={(event) => setRecognitionStopWord(event.target.value)}
-            label="recognitionStopWord"
-          />
-        </ListItem>
-        <ListItem>
-          <TextField
-            onChange={(event) => setStopAnswerWord(event.target.value)}
-            label="StopAnswerWord"
-          />
-        </ListItem>
-      </List>
-    </div>
-  )
 
   const isUseAnimating = useMemo<boolean>(
     () =>
@@ -632,7 +506,22 @@ function IndexContent() {
         open={showDrawer}
         onClose={() => setShowDrawer(false)}
       >
-        {list()}
+        <MenuList
+          userLang={userLang}
+          setUserLang={setUserLang}
+          rate={rate}
+          setRate={setRate}
+          volume={volume}
+          setVolume={setVolume}
+          pitch={pitch}
+          setPitch={setPitch}
+          answerLang={answerLang}
+          setAnswerLang={setAnswerLang}
+          recognitionStopWord={recognitionStopWord}
+          setRecognitionStopWord={setRecognitionStopWord}
+          stopAnswerWord={stopAnswerWord}
+          setStopAnswerWord={setStopAnswerWord}
+        ></MenuList>
       </Drawer>
     </div>
   )
