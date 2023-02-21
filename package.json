@@ -2,7 +2,7 @@
   "name": "talk-with-chatgpt",
   "displayName": "Talk with chat gpt",
   "version": "0.0.1",
-  "description": "A basic Plasmo extension.",
+  "description": "if you want to practice speak listening read and use chatGPT,you need it",
   "author": "anc",
   "packageManager": "pnpm@7.5.0",
   "scripts": {
