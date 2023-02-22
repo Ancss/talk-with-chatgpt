@@ -47,9 +47,9 @@ jobs:
         for subdir in dist/*; do
           if [ -d "$subdir" ]; then
             # Compress and rename the subdirectory
-            # cd "$subdir" && zip -r "../$(basename "$subdir")-${{GITHUB_TAG}}.zip" . && cd ..
+            # cd "$subdir" && zip -r "../$(basename "$subdir")-$GITHUB_TAG.zip" . && cd ..
             zip -r -9 "$subdir.zip" "$subdir"
-            mv "$subdir.zip" "${subdir}${{GITHUB_TAG}}.zip"
+            mv "$subdir.zip" "${subdir}$GITHUB_TAG.zip"
           fi
         done
 
