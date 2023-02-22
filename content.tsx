@@ -35,7 +35,7 @@ import { createRoot } from 'react-dom/client'
 import { useStorage } from '@plasmohq/storage/dist/hook'
 
 import * as style from './content.module.css'
-import { MenuList } from '~list'
+import { MenuList } from './List'
 
 declare var webkitSpeechRecognition: any
 // declare var webkitSpeechGrammarList: any

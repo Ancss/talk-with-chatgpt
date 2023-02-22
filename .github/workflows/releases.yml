@@ -1,51 +1,53 @@
-name: GitHub Release
+# name: GitHub Release
 
-on:
-  push:
-    tags:
-      - 'v*' # 发布标签以“v”开头
+# on:
+#   push:
+#     tags:
+#       - 'v*' # 发布标签以“v”开头
 
-jobs:
-  release:
-    needs: npm-build-all # 定义依赖关系
-    runs-on: ubuntu-latest
+# jobs:
+#   release:
+#     needs: npm-build-all # 定义依赖关系
+#     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+#     steps:
+#     - name: Checkout
+#       uses: actions/checkout@v2
 
-    - name: Get Git tag
-      id: get_tag
-      run: echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
-    - name: Get version from Git tag
-      id: get_version
-      run: echo "::set-output name=version::${{ steps.get_tag.outputs.tag }}"
+#     - name: Get Git tag
+#       id: get_tag
+#       # run: echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
+#       run: echo "tag={$(git describe --tags --abbrev=0)}" >> $GITHUB_TAG
+#     # - name: Get version from Git tag
+#     #   id: get_version
+#     #   # run: echo "::set-output name=version::${{ steps.get_tag.outputs.tag }}"
+#     #   run: echo "version={GITHUB_TAG}" >> $TAG_VERSION
 
-     # 下载 npm-build 工作流程的 artifact
-    - name: Download Artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: extensionsZip
-        path: build/
+#      # 下载 npm-build 工作流程的 artifact
+#     - name: Download Artifact
+#       uses: actions/download-artifact@v2
+#       with:
+#         name: extensionsZip
+#         path: build/
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1.0.7
-      env:
-        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-      with:
-        tag_name: ${{ steps.get_version.outputs.version }}
-        release_name: Release ${{ steps.get_version.outputs.version }}
-        body: 'Release of version ${{ steps.get_version.outputs.version }}'
-        draft: false
-        prerelease: false
+#     - name: Create Release
+#       id: create_release
+#       uses: actions/create-release@v1.0.7
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+#       with:
+#         tag_name: ${{ steps.get_version.outputs.version }}
+#         release_name: Release ${{ steps.get_version.outputs.version }}
+#         body: 'Release of version ${{ steps.get_version.outputs.version }}'
+#         draft: false
+#         prerelease: false
 
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: build/*
-        asset_content_type: application/zip
+#     - name: Upload Release Asset
+#       id: upload-release-asset
+#       uses: actions/upload-release-asset@v1.0.2
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+#       with:
+#         upload_url: ${{ steps.create_release.outputs.upload_url }}
+#         asset_path: build/*
+#         asset_content_type: application/zip

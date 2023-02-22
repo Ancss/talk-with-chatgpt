@@ -11,19 +11,21 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Get Git tag
       id: get_tag
-      run: echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
-    - name: Get version from Git tag
-      id: get_version
-      run: echo "::set-output name=version::${{ steps.get_tag.outputs.tag }}"
+      # run: echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
+      run: echo "tag={$(git describe --tags --abbrev=0)}" >> $GITHUB_TAG
+    # - name: Get version from Git tag
+    #   id: get_version
+    #   # run: echo "::set-output name=version::${{ steps.get_tag.outputs.tag }}"
+    #   run: echo "version={GITHUB_TAG}" >> $TAG_VERSION
 
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
-        node-version: '16.x'
+        node-version: 16
 
     - name: Install Dependencies
       run: npm install pnpm -g && pnpm i
@@ -32,7 +34,7 @@ jobs:
       run: rm -rf dist/*
 
     - name: Build
-      run: pnpm run build
+      run: pnpm run build:all
 
     - name: Install gzip
       run: sudo apt-get install gzip
@@ -45,9 +47,9 @@ jobs:
         for subdir in dist/*; do
           if [ -d "$subdir" ]; then
             # Compress and rename the subdirectory
-            # cd "$subdir" && zip -r "../$(basename "$subdir")-${{ steps.get_version.outputs.version }}.zip" . && cd ..
+            # cd "$subdir" && zip -r "../$(basename "$subdir")-$GITHUB_TAG.zip" . && cd ..
             zip -r -9 "$subdir.zip" "$subdir"
-            mv "$subdir.zip" "${subdir}${{ steps.get_version.outputs.version }}.zip"
+            mv "$subdir.zip" "${subdir}$GITHUB_TAG.zip"
           fi
         done
 
