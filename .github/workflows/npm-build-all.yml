@@ -29,26 +29,23 @@ jobs:
     - name: Install Dependencies
       run: npm install pnpm -g && pnpm i
 
-    - name: Clean dist directory
-      run: rm -rf dist/*
+    - name: Clean build directory
+      run: rm -rf build/*
 
     - name: Build
       run: pnpm run build:all
-
-    - name: Install gzip
-      run: sudo apt-get install gzip
 
     - name: Install zip
       run: sudo apt-get install zip
 
     - name: Compress and Rename
       run: |
-        for subdir in dist/*; do
+        for subdir in build/*; do
           if [ -d "$subdir" ]; then
             # Compress and rename the subdirectory
             # cd "$subdir" && zip -r "../$(basename "$subdir")-$GITHUB_TAG.zip" . && cd ..
             zip -r -9 "$subdir.zip" "$subdir"
-            mv "$subdir.zip" "${subdir}$GITHUB_TAG.zip"
+            mv "$subdir.zip" "${subdir}-$GITHUB_TAG.zip"
           fi
         done
 
