@@ -8,7 +8,13 @@
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
-    "package": "plasmo package"
+    "package": "plasmo package",
+    "build:all":"npm run build:default&&npm run build:firefox && npm run build:edge&& npm run build:brave && npm run build:opera",
+    "build:default":"plasmo build --target=chrome-mv3",
+    "build:firefox":"plasmo build --target=firefox-mv2",
+    "build:edge":"plasmo build --target=edge-mv3",
+    "build:brave":"plasmo build --target=brave-mv3",
+    "build:opera":"plasmo build --target=opera-mv3"
   },
   "dependencies": {
     "@material-ui/core": "^4.12.4",
