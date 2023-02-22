@@ -13,14 +13,13 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Get Git tag
-      id: get_tag
-      # run: echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
-      run: echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_TAG
-    # - name: Get version from Git tag
-    #   id: get_version
-    #   # run: echo "::set-output name=version::${{ steps.get_tag.outputs.tag }}"
-    #   run: echo "version={GITHUB_TAG}" >> $TAG_VERSION
+    - name: Get latest tag
+      id: latest_tag
+      run: |
+        git fetch --prune --unshallow
+        git describe --tags $(git rev-list --tags --max-count=1)
+      env:
+        GITHUB_TAG: ${{ steps.latest_tag.outputs.stdout }}
 
     - name: Use Node.js
       uses: actions/setup-node@v3
