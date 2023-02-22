@@ -25,10 +25,13 @@ jobs:
       - name: Get version
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        # run: echo "{VERSION}={VERSION}" >> ${GITHUB_REF/refs\/tags\//}
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16
+      - name: Echo Version
+        run: echo ${{ steps.get_version.outputs.VERSION }}
 
       - name: Install Dependencies
         run: npm install pnpm -g && pnpm i
