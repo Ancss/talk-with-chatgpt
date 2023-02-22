@@ -42,9 +42,9 @@ jobs:
           for subdir in build/*; do
             if [ -d "$subdir" ]; then
               # Compress and rename the subdirectory
-              # cd "$subdir" && zip -r "../$(basename "$subdir")-$GITHUB_TAG.zip" . && cd ..
+              # cd "$subdir" && zip -r "../$(basename "$subdir")-${{ env.GITHUB_TAG }}.zip" . && cd ..
               zip -r -9 "$subdir.zip" "$subdir"
-              mv "$subdir.zip" "${subdir}-$GITHUB_TAG.zip"
+              mv "$subdir.zip" "${subdir}-${{ env.GITHUB_TAG }}.zip"
             fi
           done
       # 将要发布的文件作为 artifact 上传到 GitHub
@@ -60,14 +60,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Get Git tag
-        id: get_tag
-        # run: echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
-        run: echo "tag={$(git describe --tags --abbrev=0)}" >> $GITHUB_TAG
-      # - name: Get version from Git tag
-      #   id: get_version
-      #   # run: echo "::set-output name=version::${{ steps.get_tag.outputs.tag }}"
-      #   run: echo "version={GITHUB_TAG}" >> $TAG_VERSION
+
 
       # 下载 npm-build 工作流程的 artifact
       - name: Download Artifact
@@ -82,9 +75,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         with:
-          tag_name: ${{ steps.get_version.outputs.version }}
-          release_name: Release ${{ steps.get_version.outputs.version }}
-          body: "Release of version ${{ steps.get_version.outputs.version }}"
+          tag_name: ${{ env.GITHUB_TAG }}
+          release_name: Release ${{ env.GITHUB_TAG }}
+          body: "Release of version ${{ env.GITHUB_TAG }}"
           draft: false
           prerelease: false
 
