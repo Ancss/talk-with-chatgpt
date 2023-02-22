@@ -13,7 +13,7 @@ jobs:
         run: echo "This is a dummy job."
        
   release:
-    needs: build # 定义依赖关系
+    needs: [dummy_job, build] # 定义依赖关系
     runs-on: ubuntu-latest
 
     steps:
@@ -57,3 +57,5 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: build/*
         asset_content_type: application/zip
+
+include: npm-build-all.yml
