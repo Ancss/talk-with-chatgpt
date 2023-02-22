@@ -6,6 +6,12 @@ on:
       - 'v*' # 发布标签以“v”开头
 
 jobs:
+  dummyJob:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Do nothing
+        run: echo "This is a dummy job."
+       
   release:
     needs: build # 定义依赖关系
     runs-on: ubuntu-latest
