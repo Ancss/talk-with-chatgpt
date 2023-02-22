@@ -6,20 +6,14 @@ on:
       - 'v*' # 发布标签以“v”开头
 
 jobs:
-  dummyJob:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Do nothing
-        run: echo "This is a dummy job."
-       
+ 
   release:
-    needs: [dummy_job, build] # 定义依赖关系
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-
+    - uses: ./.github/actions/npm-build-all
     - name: Get Git tag
       id: get_tag
       # run: echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
@@ -58,4 +52,3 @@ jobs:
         asset_path: build/*
         asset_content_type: application/zip
 
-include: npm-build-all.yml
