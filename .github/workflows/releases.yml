@@ -17,7 +17,7 @@ jobs:
       - name: Get latest tag
         id: latest_tag
         run: |
-          git fetch --tags
+          git fetch --tags --prune
           git describe --tags $(git rev-list --tags --max-count=1)
         env:
           GITHUB_TAG: ${{ steps.latest_tag.outputs.stdout }}
