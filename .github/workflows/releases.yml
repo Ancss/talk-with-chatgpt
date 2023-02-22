@@ -55,6 +55,14 @@ jobs:
               mv "$subdir.zip" "${subdir}-${{ steps.get_version.outputs.VERSION }}.zip"
             fi
           done
+      - name: echo file
+        run: |
+          echo "目录下文件名："
+          for file in *; do
+            if [ -f "$file" ]; then
+              echo "$file"
+            fi
+          done
       # 将要发布的文件作为 artifact 上传到 GitHub
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
