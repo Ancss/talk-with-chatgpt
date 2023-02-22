@@ -65,10 +65,10 @@ jobs:
           done
       # 将要发布的文件作为 artifact 上传到 GitHub
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: extensionsZip
-          path: build/*.zip
+          path: path/build/*.zip
 
   release:
     runs-on: ubuntu-latest
@@ -83,10 +83,13 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       # 下载 npm-build 工作流程的 artifact
       - name: Download Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: extensionsZip
-          path: build/
+          path: path/build/
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: build/
 
       - name: Create Release
         id: create_release
