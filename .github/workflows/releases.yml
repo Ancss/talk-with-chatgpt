@@ -69,7 +69,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       # 下载 npm-build 工作流程的 artifact
       - name: Download Artifact
         uses: actions/download-artifact@v2
