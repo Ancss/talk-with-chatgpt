@@ -14,14 +14,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get latest tag
-        id: latest_tag
-        run: |
-          git fetch --tags --prune
-          git describe --tags $(git rev-list --tags --max-count=1)
-        env:
-          GITHUB_TAG: ${{ steps.latest_tag.outputs.stdout }}
+      # - name: Get latest tag
+      #   id: latest_tag
+      #   run: |
+      #     git fetch --tags --prune
+      #     git describe --tags $(git rev-list --tags --max-count=1)
+      #   env:
+      #     GITHUB_TAG: ${{ steps.latest_tag.outputs.stdout }}
 
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
@@ -44,9 +47,9 @@ jobs:
           for subdir in build/*; do
             if [ -d "$subdir" ]; then
               # Compress and rename the subdirectory
-              # cd "$subdir" && zip -r "../$(basename "$subdir")-${{ env.GITHUB_TAG }}.zip" . && cd ..
+              # cd "$subdir" && zip -r "../$(basename "$subdir")-${{ steps.get_version.outputs.VERSION }}.zip" . && cd ..
               zip -r -9 "$subdir.zip" "$subdir"
-              mv "$subdir.zip" "${subdir}-${{ env.GITHUB_TAG }}.zip"
+              mv "$subdir.zip" "${subdir}-${{ steps.get_version.outputs.VERSION }}.zip"
             fi
           done
       # 将要发布的文件作为 artifact 上传到 GitHub
@@ -77,9 +80,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.GITHUB_TAG }}
-          release_name: Release ${{ env.GITHUB_TAG }}
-          body: "Release of version ${{ env.GITHUB_TAG }}"
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: "Release of version ${{ steps.get_version.outputs.VERSION }}"
           draft: false
           prerelease: false
 
