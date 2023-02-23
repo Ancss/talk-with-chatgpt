@@ -9,35 +9,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+
+      - name: Query version number
+        run: echo "version=${GITHUB_REF:11}" >> $GITHUB_ENV
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        id: pnpm-install
         with:
-          fetch-depth: 0
+          version: 7
+          run_install: false
 
-      # - name: Get latest tag
-      #   id: latest_tag
-      #   run: |
-      #     git fetch --tags --prune
-      #     git describe --tags $(git rev-list --tags --max-count=1)
-      #   env:
-      #     GITHUB_TAG: ${{ steps.latest_tag.outputs.stdout }}
-
-      - name: Get version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-        # run: echo "{VERSION}={VERSION}" >> ${GITHUB_REF/refs\/tags\//}
-      - name: Use Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16
-      - name: Echo Version
-        run: echo ${{ steps.get_version.outputs.VERSION }}
-
-      - name: Install Dependencies
-        run: npm install pnpm -g && pnpm i
-
-      - name: Clean build directory
-        run: rm -rf build/*
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm run build:all
@@ -50,72 +39,26 @@ jobs:
           for subdir in build/*; do
             if [ -d "$subdir" ]; then
               zip -r -9 "$subdir.zip" "$subdir"
-              mv "$subdir.zip" "${subdir}-${{ steps.get_version.outputs.VERSION }}.zip"
+              mv "$subdir.zip" "${subdir}-${{ env.version }}.zip"
             fi
           done
       - name: echo file
         run: |
-          echo "目录下文件名："
-          for file in *; do
+          echo "build file"
+          for file in build/*; do
             if [ -f "$file" ]; then
               echo "$file"
             fi
           done
-      - name: Upload release asset
-        uses: actions/upload-release-asset@v1
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: build/
-          asset_name: build
-          asset_content_type: application/gzip
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      # 将要发布的文件作为 artifact 上传到 GitHub
-      # - name: Upload Artifact
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: extensionsZip
-      #     path: path/build/*.zip
-
-  # release:
-  #   runs-on: ubuntu-latest
-  #   permissions: write-all
-  #   needs: build
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
-
-  #     - name: Get version
-  #       id: get_version
-  #       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-  #     # 下载 npm-build 工作流程的 artifact
-  #     - name: Download Artifact
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: extensionsZip
-  #         path: path/build/
-  #     - name: Display structure of downloaded files
-  #       run: ls -R
-  #       working-directory: build/
-
-  #     - name: Create Release
-  #       id: create_release
-  #       uses: actions/create-release@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         tag_name: ${{ steps.get_version.outputs.VERSION }}
-  #         release_name: Release ${{ steps.get_version.outputs.VERSION }}
-  #         body: "Release of version ${{ steps.get_version.outputs.VERSION }}"
-  #         draft: false
-  #         prerelease: false
-
-  #     - name: Upload Release Asset
-  #       id: upload-release-asset
-  #       uses: actions/upload-release-asset@v1.0.2
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         upload_url: ${{ steps.create_release.outputs.upload_url }}
-  #         asset_path: build/*
-  #         asset_name: build
-  #         asset_content_type: application/zip
+          tag_name: v${{ env.version }}
+          name: ChatGPT v${{ env.version }}
+          body: See the assets to download this version and install.
+          prerelease: false
+          generate_release_notes: false
+          files: ./build/*.zip
