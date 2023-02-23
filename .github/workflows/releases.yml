@@ -57,8 +57,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.version }}
-          name: ChatGPT ${{ env.version }}
+          tag_name: v${{ env.version }}
+          name: talk with ChatGPT v${{ env.version }}
           body: See the assets to download this version and install.
           prerelease: false
           generate_release_notes: false
