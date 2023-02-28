@@ -476,16 +476,7 @@ function IndexContent() {
         src={recordPlayerBg}
         alt=""
       />
-      <img
-        className={[
-          style.playerController,
-          isUseAnimating ? style.controllerOnPlayer : '',
-        ].join(' ')}
-        onClick={() => toggleStatus(true)}
-        src={playerControllerBg}
-        alt=""
-      />
-      <div
+       <div
         className={[style.innerContainer].join(' ')}
         onClick={() => toggleStatus(false)}
       >
@@ -495,6 +486,16 @@ function IndexContent() {
           currentPlayerStatus={currentPlayerStatus}
         ></StatusComponentIcon>
       </div>
+      <img
+        className={[
+          style.playerController,
+          isUseAnimating ? style.controllerOnPlayer : '',
+        ].join(' ')}
+        onClick={() => toggleStatus(true)}
+        src={playerControllerBg}
+        alt=""
+      />
+     
       <SettingsIcon
         onClick={() => popupDrawer()}
         className={`${style.settingsButton} ${

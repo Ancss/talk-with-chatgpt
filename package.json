@@ -41,8 +41,7 @@
   },
   "manifest": {
     "permissions": [
-      "speechRecognition",
-      "textToSpeech"
+      
     ],
     "host_permissions": [
       "https://chat.openai.com/*"
